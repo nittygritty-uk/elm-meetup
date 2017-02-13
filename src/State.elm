@@ -17,15 +17,14 @@ init =
     )
 
 
-
 update : Msg -> Model -> Response Model Msg
 update msg model =
     case msg of
         KeepAlive ->
             ( model, Cmd.none )
 
-      Move ->
-                ( model, Cmd.none )
+        Move ->
+            ( model, Cmd.none )
 
         Receive response ->
             ( { lastMessage = Just response }
@@ -48,21 +47,22 @@ subscriptions model =
             |> Sub.map (always KeepAlive)
         ]
 
+
 down : Int -> Msg
-        down count =
-            move (negate count) 0
+down count =
+    Move (negate count) 0
 
 
 right : Int -> Msg
-        right count =
-            move count 0
+right count =
+    Move count 0
 
 
 up : Int -> Msg
-        up count =
-            move 0 count
+up count =
+    Move 0 count
 
 
 left : Int -> Msg
-        left count =
-            Move 0 (negate count)
+left count =
+    Move 0 (negate count)
