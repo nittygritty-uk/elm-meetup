@@ -13,7 +13,7 @@ websocketEndpoint =
 
 init : Response Model Msg
 init =
-    ( { lastMessage = Nothing }
+    ( { lastMessage = Nothing, x = 0, y = 0 }
     , Cmd.none
     )
 
@@ -36,11 +36,7 @@ update msg model =
             ( model, Cmd.none )
 
         Receive response ->
-            -- let
-            --     _ =
-            --         Debug.log "web server received " response
-            --  in
-            ( { lastMessage = Just response }
+            ( { model | lastMessage = Just response }
             , Cmd.none
             )
 
