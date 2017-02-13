@@ -23,7 +23,7 @@ update msg model =
         KeepAlive ->
             ( model, Cmd.none )
 
-        Move ->
+        Move x y ->
             ( model, Cmd.none )
 
         Receive response ->
