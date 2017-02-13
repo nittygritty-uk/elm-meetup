@@ -21,19 +21,32 @@ update : Msg -> Model -> Response Model Msg
 update msg model =
     case msg of
         KeepAlive ->
-            ( model, Cmd.none )
+            let
+                _ =
+                    Debug.log "keep alive " "alive"
+            in
+                ( model, Cmd.none )
 
         Receive response ->
-            ( { lastMessage = Just response }
-            , Cmd.none
-            )
+            let
+                _ =
+                    Debug.log "web server received " response
+            in
+                ( { lastMessage = Just response }
+                , Cmd.none
+                )
 
         SendWebSocket ->
             let
                 _ =
                     Debug.log "WebSocket" "1"
             in
-                ( model, Cmd.none )
+                ( model, WebSocket.send websocketEndpoint "{}" )
+
+
+
+--    ( model, Cmd.none )
+--
 
 
 subscriptions : Model -> Sub Msg
