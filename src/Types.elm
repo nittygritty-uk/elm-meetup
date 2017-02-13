@@ -4,7 +4,8 @@ module Types exposing (..)
 type Msg
     = Receive String
     | KeepAlive
-    | SendWebSocket
+    | SetName
+    | SetColour
     | Move Int Int
 
 

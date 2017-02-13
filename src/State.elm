@@ -40,7 +40,7 @@ update msg model =
             , Cmd.none
             )
 
-        SendWebSocket ->
+        SetName ->
             let
                 _ =
                     Debug.log "Sending WebSocket" "1"
@@ -51,16 +51,28 @@ update msg model =
                         , ( "contents", string "Team 42" )
                         ]
 
+                payload_string1 =
+                    encode 0 payload1
+
+                _ =
+                    Debug.log "payload1" payload_string1
+            in
+                ( model
+                , Cmd.batch
+                    [ WebSocket.send websocketEndpoint payload_string1
+                    ]
+                )
+
+        SetColour ->
+            let
+                _ =
+                    Debug.log "Sending colour" "1"
+
                 payload2 =
                     object
                         [ ( "tag", string "SetColor" )
                         , ( "contents", string "#ff0000" )
                         ]
-
-                --[ ( "tag", Json.Encode.string "SetName" ), ( "contents", Json.Encode.string "Team Two" ) ]
-                --    { tag = "SetName", contents = "Team Two" }
-                payload_string1 =
-                    encode 0 payload1
 
                 payload_string2 =
                     encode 0 payload2
@@ -68,12 +80,11 @@ update msg model =
                 --    "{\"tag\": \"Move\", \"contents\": \"{x: -1, y: 0}\"}"
                 --    "{\"tag\": \"SetName\", \"contents\": \"Team One\"}"
                 _ =
-                    Debug.log "payload1" payload_string1
+                    Debug.log "payload1" payload_string2
             in
                 ( model
                 , Cmd.batch
-                    [ WebSocket.send websocketEndpoint payload_string1
-                    , WebSocket.send websocketEndpoint payload_string2
+                    [ WebSocket.send websocketEndpoint payload_string2
                     ]
                 )
 

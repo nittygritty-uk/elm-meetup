@@ -20,7 +20,9 @@ root model =
         [ bootstrap.css
         , div []
             [ div []
-                [ button [ onClick SendWebSocket ] [ text "Send a test message" ] ]
+                [ button [ onClick SetName ] [ text "Set name" ]
+                , button [ onClick SetColour ] [ text "Set colour" ]
+                ]
             , button [ onClick (Move 0 -1) ] [ text "Left" ]
             , button [ onClick (Move 1 0) ] [ text "Right" ]
             , button [ onClick (Move 0 1) ] [ text "Up" ]
