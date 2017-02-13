@@ -3,11 +3,12 @@ module State exposing (init, update, subscriptions)
 import Response exposing (..)
 import Types exposing (..)
 import WebSocket
+import Json.Encode exposing (..)
 
 
 websocketEndpoint : String
 websocketEndpoint =
-    "ws://game.clearercode.com"
+    "ws://game.clearercode.com:8000"
 
 
 init : Response Model Msg
@@ -19,32 +20,66 @@ init =
 
 update : Msg -> Model -> Response Model Msg
 update msg model =
+    -- let
+    --     _ =
+    --         Debug.log "update" msg
+    -- in
     case msg of
         KeepAlive ->
-            let
-                _ =
-                    Debug.log "keep alive " "alive"
-            in
-                ( model, Cmd.none )
+            -- let
+            --     _ =
+            --         Debug.log "keep alive " "alive"
+            -- in
+            ( model, Cmd.none )
 
         Move x y ->
             ( model, Cmd.none )
 
         Receive response ->
-            let
-                _ =
-                    Debug.log "web server received " response
-            in
-                ( { lastMessage = Just response }
-                , Cmd.none
-                )
+            -- let
+            --     _ =
+            --         Debug.log "web server received " response
+            --  in
+            ( { lastMessage = Just response }
+            , Cmd.none
+            )
 
         SendWebSocket ->
             let
                 _ =
-                    Debug.log "WebSocket" "1"
+                    Debug.log "Sending WebSocket" "1"
+
+                payload1 =
+                    object
+                        [ ( "tag", string "SetName" )
+                        , ( "contents", string "Team 42" )
+                        ]
+
+                payload2 =
+                    object
+                        [ ( "tag", string "SetColor" )
+                        , ( "contents", string "#ff0000" )
+                        ]
+
+                --[ ( "tag", Json.Encode.string "SetName" ), ( "contents", Json.Encode.string "Team Two" ) ]
+                --    { tag = "SetName", contents = "Team Two" }
+                payload_string1 =
+                    encode 0 payload1
+
+                payload_string2 =
+                    encode 0 payload2
+
+                --    "{\"tag\": \"Move\", \"contents\": \"{x: -1, y: 0}\"}"
+                --    "{\"tag\": \"SetName\", \"contents\": \"Team One\"}"
+                _ =
+                    Debug.log "payload1" payload_string1
             in
-                ( model, WebSocket.send websocketEndpoint "{}" )
+                ( model
+                , Cmd.batch
+                    [ WebSocket.send websocketEndpoint payload_string1
+                    , WebSocket.send websocketEndpoint payload_string2
+                    ]
+                )
 
 
 

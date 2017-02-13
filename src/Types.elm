@@ -8,5 +8,11 @@ type Msg
     | Move Int Int
 
 
+type alias Message =
+    { tag : String
+    , contents : String
+    }
+
+
 type alias Model =
     { lastMessage : Maybe String }
