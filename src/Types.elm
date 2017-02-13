@@ -9,4 +9,4 @@ type Msg
 
 
 type alias Model =
-    { lastMessage : Maybe String }
+    { lastMessage : Maybe String, x : Int, y : Int }
