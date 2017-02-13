@@ -23,4 +23,8 @@ root model =
             , div []
                 [ button [ onClick SendWebSocket ] [ text "Send a test message" ] ]
             ]
+            , button [ onClick (Move 0 -1) ] [ text "Left" ]
+            , button [ onClick (Move 1 0) ] [ text "Right" ]
+            , button [ onClick (Move 0 1) ] [ text "Up" ]
+            , button [ onClick (Move 0 -1) ] [ text "Down" ]
         ]

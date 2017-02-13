@@ -5,6 +5,7 @@ type Msg
     = Receive String
     | KeepAlive
     | SendWebSocket
+    | Move Int Int
 
 
 type alias Model =
