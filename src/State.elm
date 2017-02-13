@@ -27,6 +27,9 @@ update msg model =
             in
                 ( model, Cmd.none )
 
+        Move x y ->
+            ( model, Cmd.none )
+
         Receive response ->
             let
                 _ =
@@ -56,3 +59,23 @@ subscriptions model =
         , WebSocket.keepAlive websocketEndpoint
             |> Sub.map (always KeepAlive)
         ]
+
+
+down : Int -> Msg
+down count =
+    Move (negate count) 0
+
+
+right : Int -> Msg
+right count =
+    Move count 0
+
+
+up : Int -> Msg
+up count =
+    Move 0 count
+
+
+left : Int -> Msg
+left count =
+    Move 0 (negate count)
