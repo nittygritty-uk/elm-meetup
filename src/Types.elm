@@ -15,8 +15,11 @@ type alias GPSS =
 type Msg
     = Receive String
     | KeepAlive
+    | SetName
+    | MakeSend Bool
+    | SetColour
+    | Move Float Float
     | SendWebSocket
-    | Move Int Int
 
 
 type alias Eqn =
@@ -36,15 +39,23 @@ type alias DoubleIntersect =
     }
 
 
+type alias Message =
+    { tag : String
+    , contents : String
+    }
+
+
 type alias Model =
     { lastMessage : Maybe String
     , movedx : Int
     , movedy : Int
-    , x : Int
-    , y : Int
+    , x : Float
+    , y : Float
+    , send : Bool
     , eqn1 : Maybe Eqn
     , eqn2 : Maybe Eqn
     , eqn3 : Maybe Eqn
+    , solution : { x : Int, y : Int }
     , intersect1 : Maybe DoubleIntersect
     , intersect2 : Maybe DoubleIntersect
     }

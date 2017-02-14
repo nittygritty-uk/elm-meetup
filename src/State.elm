@@ -4,11 +4,13 @@ import Response exposing (..)
 import Types exposing (..)
 import Array exposing (..)
 import WebSocket
-import Json.Decode as Decode exposing (..)
-import Json.Encode as Encode exposing (..)
+import Time
+import Task
+import Process
 import Html.Attributes as H exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
+import Json.Encode as Encode exposing (..)
 
 
 websocketEndpoint : String
@@ -99,32 +101,69 @@ init =
       , eqn1 = Nothing
       , eqn2 = Nothing
       , eqn3 = Nothing
+      , solution = { x = 0, y = 0 }
       , intersect1 = Nothing
       , intersect2 = Nothing
       , movedx = 0
+      , send = False
       , movedy = 0
       }
     , Cmd.none
     )
 
 
+move x y =
+    Move x y
+
+
 update : Msg -> Model -> Response Model Msg
 update msg model =
+    -- let
+    --     _ =
+    --         Debug.log "update" msg
+    -- in
     case msg of
+        MakeSend t ->
+            ( { model | send = not t }, Cmd.none )
+
+        SendWebSocket ->
+            -- let
+            --     _ =
+            --         Debug.log "keep alive " "alive"
+            -- in
+            ( model, Cmd.none )
+
         KeepAlive ->
+            -- let
+            --     _ =
+            --         Debug.log "keep alive " "alive"
+            -- in
             ( model, Cmd.none )
 
         Move x y ->
             let
-                eqn1 =
-                    { a = -10, b = -8, r = 15.275 }
-
                 _ =
-                    Debug.log "WebSocket" ((toString (eqn1.a)) ++ (toString (eqn1.b)))
+                    Debug.log "Sending Move" "1"
 
-                --solveEqn ({ a = -10, b = -8, r = 15.275 })
+                payload2 =
+                    object
+                        [ ( "tag", Encode.string "Move" )
+                        , ( "contents", Encode.object [ ( "x", Encode.float x ), ( "y", Encode.float y ) ] )
+                        ]
+
+                payload_string2 =
+                    encode 0 payload2
+
+                --    "{\"tag\": \"Move\", \"contents\": \"{x: -1, y: 0}\"}"
+                --    "{\"tag\": \"SetName\", \"contents\": \"Team One\"}"
+                _ =
+                    Debug.log "payload1" payload_string2
             in
-                ( model, Cmd.none )
+                ( { model | x = model.x + x, y = model.y + y }
+                , Cmd.batch
+                    [ WebSocket.send websocketEndpoint payload_string2
+                    ]
+                )
 
         Receive response ->
             let
@@ -262,22 +301,82 @@ update msg model =
 
                 solution =
                     { x = tempsolution.x + firstx, y = tempsolution.y + firsty }
+
+                _ =
+                    Debug.log "Sending Move" "1"
+
+                payload2 =
+                    object
+                        [ ( "tag", Encode.string "Move" )
+                        , ( "contents", Encode.object [ ( "x", Encode.float (toFloat solution.x) ), ( "y", Encode.float (toFloat solution.y) ) ] )
+                        ]
+
+                payload_string2 =
+                    encode 0 payload2
+
+                --    "{\"tag\": \"Move\", \"contents\": \"{x: -1, y: 0}\"}"
+                --    "{\"tag\": \"SetName\", \"contents\": \"Team One\"}"
+                _ =
+                    Debug.log "payload1" payload_string2
             in
-                ( { model | movedx = firstx, intersect1 = solved1, intersect2 = solved2, movedy = firsty, lastMessage = Just response, eqn1 = first, eqn2 = second, eqn3 = third }
+                ( { model | solution = solution, movedx = firstx, intersect1 = solved1, x = (toFloat solution.x), y = (toFloat solution.y), intersect2 = solved2, movedy = firsty, lastMessage = Just response, eqn1 = first, eqn2 = second, eqn3 = third }
                 , Cmd.none
                 )
 
-        SendWebSocket ->
+        SetName ->
             let
                 _ =
-                    Debug.log "WebSocket" "1"
+                    Debug.log "Sending WebSocket" "1"
+
+                payload1 =
+                    object
+                        [ ( "tag", Encode.string "SetName" )
+                        , ( "contents", Encode.string "Team 42" )
+                        ]
+
+                payload_string1 =
+                    encode 0 payload1
+
+                _ =
+                    Debug.log "payload1" payload_string1
             in
-                ( model, Cmd.none )
+                ( model
+                , Cmd.batch
+                    [ WebSocket.send websocketEndpoint payload_string1
+                    , Task.perform (\_ -> Move 0.0 0.0) (Process.sleep (2 * Time.second))
+                    ]
+                )
+
+        SetColour ->
+            let
+                _ =
+                    Debug.log "Sending colour" "1"
+
+                payload2 =
+                    object
+                        [ ( "tag", Encode.string "SetColor" )
+                        , ( "contents", Encode.string "#ff0000" )
+                        ]
+
+                payload_string2 =
+                    encode 0 payload2
+
+                --    "{\"tag\": \"Move\", \"contents\": \"{x: -1, y: 0}\"}"
+                --    "{\"tag\": \"SetName\", \"contents\": \"Team One\"}"
+                _ =
+                    Debug.log "payload1" payload_string2
+            in
+                ( model
+                , Cmd.batch
+                    [ WebSocket.send websocketEndpoint payload_string2
+                    , Task.perform (\_ -> Move 0.0 0.0) (Process.sleep (2 * Time.second))
+                    ]
+                )
 
 
-null_or_list_decoder : Json.Decoder (Maybe (List String))
-null_or_list_decoder =
-    Json.oneOf [ Json.null Nothing, Decode.map Just (Json.list Json.string) ]
+
+--    ( model, Cmd.none )
+--
 
 
 decode : Json.Decoder ServerResponse
@@ -313,23 +412,3 @@ subscriptions model =
         , WebSocket.keepAlive websocketEndpoint
             |> Sub.map (always KeepAlive)
         ]
-
-
-down : Int -> Msg
-down count =
-    Move (negate count) 0
-
-
-right : Int -> Msg
-right count =
-    Move count 0
-
-
-up : Int -> Msg
-up count =
-    Move 0 count
-
-
-left : Int -> Msg
-left count =
-    Move 0 (negate count)
