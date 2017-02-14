@@ -210,7 +210,7 @@ update msg model =
                     hyp model.solution.x model.solution.y
 
                 remaining =
-                    if model.remainingToPoint - 1 < 1 then
+                    if model.remainingToPoint - 1 <= 0 then
                         round hypot
                     else
                         model.remainingToPoint - 1
