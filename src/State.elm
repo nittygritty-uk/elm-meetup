@@ -157,8 +157,14 @@ update msg model =
                 hypot =
                     hyp model.solution.x model.solution.y
 
+                remaining =
+                    if model.remainingToPoint - 1 < 0 then
+                        0
+                    else
+                        model.remainingToPoint - 1
+
                 receiving =
-                    case model.remainingToPoint - 1 of
+                    case remaining of
                         0 ->
                             True
 
@@ -166,7 +172,7 @@ update msg model =
                             False
 
                 cmd =
-                    case model.remainingToPoint - 1 of
+                    case remaining of
                         0 ->
                             [ WebSocket.send websocketEndpoint payload_string2
                             ]
@@ -190,7 +196,7 @@ update msg model =
                 _ =
                     Debug.log "payload1" payload_string2
             in
-                ( { model | receiving = receiving, remainingToPoint = model.remainingToPoint - 1, x = (model.x), y = model.y }
+                ( { model | receiving = receiving, remainingToPoint = remaining, x = (model.x), y = model.y }
                 , Cmd.batch
                     cmd
                 )
@@ -204,12 +210,10 @@ update msg model =
                     hyp model.solution.x model.solution.y
 
                 remaining =
-                    case model.remainingToPoint - 1 of
-                        0 ->
-                            round hypot
-
-                        _ ->
-                            model.remainingToPoint - 1
+                    if model.remainingToPoint - 1 < 1 then
+                        round hypot
+                    else
+                        model.remainingToPoint - 1
 
                 cmd =
                     case model.remainingToPoint - 1 of
