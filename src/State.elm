@@ -5,6 +5,7 @@ import Types exposing (..)
 import Array exposing (..)
 import WebSocket
 import Time
+import Bitwise
 import Task
 import Process
 import Html.Attributes as H exposing (..)
@@ -16,6 +17,12 @@ import Json.Encode as Encode exposing (..)
 websocketEndpoint : String
 websocketEndpoint =
     "ws://game.clearercode.com:8000"
+
+
+hyp : Int -> Int -> Float
+hyp x y =
+    toFloat ((x ^ 2) + (y ^ 2))
+        |> sqrt
 
 
 solveForx a b c =
@@ -101,6 +108,8 @@ init =
       , eqn1 = Nothing
       , eqn2 = Nothing
       , eqn3 = Nothing
+      , receiving = True
+      , remainingToPoint = 0
       , solution = { x = 0, y = 0 }
       , intersect1 = Nothing
       , intersect2 = Nothing
@@ -139,6 +148,99 @@ update msg model =
             --         Debug.log "keep alive " "alive"
             -- in
             ( model, Cmd.none )
+
+        ReturnToHome ->
+            let
+                _ =
+                    Debug.log "Sending Move" "1"
+
+                hypot =
+                    hyp model.solution.x model.solution.y
+
+                receiving =
+                    case model.remainingToPoint - 1 of
+                        0 ->
+                            True
+
+                        _ ->
+                            False
+
+                cmd =
+                    case model.remainingToPoint - 1 of
+                        0 ->
+                            [ WebSocket.send websocketEndpoint payload_string2
+                            ]
+
+                        _ ->
+                            [ WebSocket.send websocketEndpoint payload_string2
+                            , Task.perform (\_ -> ReturnToHome) (Process.sleep (0.5 * Time.second))
+                            ]
+
+                payload2 =
+                    object
+                        [ ( "tag", Encode.string "Move" )
+                        , ( "contents", Encode.object [ ( "x", Encode.int (negate model.solution.x) ), ( "y", Encode.int (negate model.solution.y) ) ] )
+                        ]
+
+                payload_string2 =
+                    encode 0 payload2
+
+                --    "{\"tag\": \"Move\", \"contents\": \"{x: -1, y: 0}\"}"
+                --    "{\"tag\": \"SetName\", \"contents\": \"Team One\"}"
+                _ =
+                    Debug.log "payload1" payload_string2
+            in
+                ( { model | receiving = receiving, remainingToPoint = model.remainingToPoint - 1, x = (model.x), y = model.y }
+                , Cmd.batch
+                    cmd
+                )
+
+        MoveToSolution ->
+            let
+                _ =
+                    Debug.log "Sending Move" "1"
+
+                hypot =
+                    hyp model.solution.x model.solution.y
+
+                remaining =
+                    case model.remainingToPoint - 1 of
+                        0 ->
+                            round hypot
+
+                        _ ->
+                            model.remainingToPoint - 1
+
+                cmd =
+                    case model.remainingToPoint - 1 of
+                        0 ->
+                            [ WebSocket.send websocketEndpoint payload_string2
+                            , Task.perform (\_ -> ReturnToHome) (Process.sleep (0.5 * Time.second))
+                            ]
+
+                        _ ->
+                            [ WebSocket.send websocketEndpoint payload_string2
+                            , Task.perform (\_ -> MoveToSolution) (Process.sleep (0.5 * Time.second))
+                            ]
+
+                payload2 =
+                    object
+                        [ ( "tag", Encode.string "Move" )
+                        , ( "contents", Encode.object [ ( "x", Encode.int model.solution.x ), ( "y", Encode.int model.solution.y ) ] )
+                        ]
+
+                payload_string2 =
+                    encode 0 payload2
+
+                --    "{\"tag\": \"Move\", \"contents\": \"{x: -1, y: 0}\"}"
+                --    "{\"tag\": \"SetName\", \"contents\": \"Team One\"}"
+                _ =
+                    Debug.log "payload1" payload_string2
+            in
+                ( { model | receiving = False, remainingToPoint = remaining, x = (model.x), y = model.y }
+                , Cmd.batch
+                    cmd
+                )
 
         Move x y ->
             let
@@ -279,23 +381,12 @@ update msg model =
                                     { x = 0, y = 0 }
 
                                 Just b ->
-                                    if a.first.x == b.first.x then
-                                        if a.first.y == b.first.y then
-                                            { x = a.first.x, y = a.first.y }
-                                        else
-                                            { x = a.first.x, y = b.first.y }
-                                    else if a.second.x == b.second.x then
-                                        if a.second.y == b.second.y then
-                                            { x = a.second.x, y = a.second.y }
-                                        else
-                                            { x = a.second.x, y = b.second.y }
-                                    else if a.first.x == b.second.x then
-                                        if a.first.y == b.second.y then
-                                            { x = a.first.x, y = a.first.y }
-                                        else
-                                            { x = a.first.x, y = b.second.y }
-                                    else if a.second.y == b.first.y then
+                                    if (a.first.x == b.first.x) && (a.first.y == b.first.y) then
+                                        { x = a.first.x, y = a.first.y }
+                                    else if (a.second.x == b.second.x) && (a.second.y == b.second.y) then
                                         { x = a.second.x, y = a.second.y }
+                                    else if (a.first.x == b.second.x) && (a.first.y == b.second.y) then
+                                        { x = a.first.x, y = a.first.y }
                                     else
                                         { x = a.second.x, y = b.first.y }
 
@@ -319,9 +410,18 @@ update msg model =
                 _ =
                     Debug.log "payload1" payload_string2
             in
-                ( { model | solution = solution, movedx = firstx, intersect1 = solved1, x = (toFloat solution.x), y = (toFloat solution.y), intersect2 = solved2, movedy = firsty, lastMessage = Just response, eqn1 = first, eqn2 = second, eqn3 = third }
-                , Cmd.none
-                )
+                case model.receiving of
+                    True ->
+                        ( { model | remainingToPoint = (round (hyp solution.x solution.y)), solution = solution, movedx = firstx, intersect1 = solved1, x = (toFloat solution.x), y = (toFloat solution.y), intersect2 = solved2, movedy = firsty, lastMessage = Just response, eqn1 = first, eqn2 = second, eqn3 = third }
+                        , Cmd.batch
+                            [ Task.perform (\_ -> MoveToSolution) (Process.sleep (0.1 * Time.second))
+                            ]
+                        )
+
+                    False ->
+                        ( model
+                        , Cmd.none
+                        )
 
         SetName ->
             let

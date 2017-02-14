@@ -14,6 +14,8 @@ type alias GPSS =
 
 type Msg
     = Receive String
+    | MoveToSolution
+    | ReturnToHome
     | KeepAlive
     | SetName
     | MakeSend Bool
@@ -51,6 +53,8 @@ type alias Model =
     , movedy : Int
     , x : Float
     , y : Float
+    , remainingToPoint : Int
+    , receiving : Bool
     , send : Bool
     , eqn1 : Maybe Eqn
     , eqn2 : Maybe Eqn

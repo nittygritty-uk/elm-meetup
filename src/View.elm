@@ -28,7 +28,7 @@ root model =
                 ]
             , button [ onClick (Move -1.0 0.0) ] [ text "Left" ]
             , button [ onClick (Move 1.0 0.0) ] [ text "Right" ]
-            , button [ onClick (Move (toFloat model.solution.x) (toFloat model.solution.y)) ] [ text "Move To Solution" ]
+            , button [ onClick (MoveToSolution) ] [ text "Move To Solution" ]
             , button [ onClick (Move (negate model.x) (negate model.y)) ] [ text "Return to Zero" ]
             , button [ onClick (Move 0.0 1.0) ] [ text "Up" ]
             , button [ onClick (Move 0.0 -1.0) ] [ text "Down" ]
